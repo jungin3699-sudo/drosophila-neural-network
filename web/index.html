@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drosophila Maze Simulator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <header>
+            <h1>Drosophila Maze Simulator</h1>
+            <p>초파리 인공 신경망 기반 미로 탐색 시뮬레이션</p>
+        </header>
+
+        <main>
+
+            <!-- 미로 -->
+            <section class="maze-section">
+                <h2>Maze</h2>
+
+                <div id="maze"></div>
+            </section>
+
+            <!-- 정보 -->
+            <section class="info-section">
+
+                <div class="info-box">
+                    <h2>Female Response</h2>
+
+                    <div class="response-value">
+                        <span id="responseValue">0</span>%
+                    </div>
+
+                    <div class="response-bar">
+                        <div id="responseBar"></div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h2>Simulation Status</h2>
+
+                    <p>상태: <span id="status">대기 중</span></p>
+                    <p>방향: <span id="direction">-</span></p>
+                    <p>이동 시간: <span id="time">0.0</span> s</p>
+                    <p>이동 거리: <span id="distance">0</span></p>
+                </div>
+
+            </section>
+
+        </main>
+
+        <!-- 버튼 -->
+        <div class="controls">
+            <button id="startButton">▶ 시작</button>
+            <button id="pauseButton">Ⅱ 일시정지</button>
+            <button id="resetButton">↻ 재시작</button>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
