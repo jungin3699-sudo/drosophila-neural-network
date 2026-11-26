@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fly Maze</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>FLY MAZE</h1>
+        <p>Neural circuit readout with odor-guided search</p>
+    </header>
+    <main>
+        <section class="maze-section">
+            <h2>MAZE EXPLORATION</h2>
+            <div id="maze" aria-label="미로 시뮬레이션"></div>
+            <div class="legend">
+                <span><i class="legend-fly"></i>날파리</span>
+                <span><i class="legend-goal"></i>냄새 발생 지점</span>
+                <span><i class="legend-odor"></i>냄새 강도</span>
+                <span>바람: 오른쪽 → 왼쪽</span>
+            </div>
+            <div class="controls">
+                <button id="startBtn" type="button">START</button>
+                <button id="pauseBtn" type="button">PAUSE</button>
+                <button id="resetBtn" type="button">NEW MAZE</button>
+            </div>
+            <p id="status" role="status">Ready to explore</p>
+            <p id="behaviorMode" class="readout">행동 상태: 대기</p>
+            <p id="stepCounter" class="readout">이동 횟수: 0</p>
+        </section>
+        <section class="neural-section">
+            <h2>NEURAL CIRCUIT READOUT</h2>
+            <p class="note">회로 활성도는 표시용이며 현재 이동 규칙을 직접 제어하지 않습니다.</p>
+            <div id="neuralInfo" aria-live="polite">미로를 시작하면 신호와 회로 활성도를 표시합니다.</div>
+        </section>
+    </main>
+    <script src="neural.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
