@@ -1,0 +1,54 @@
+:root { --cell-size: clamp(16px, 2.7vw, 27px); font-family: "Segoe UI", "Malgun Gothic", sans-serif; color: #173047; background: #f2f7fa; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; }
+header { padding: 22px 5vw 18px; color: white; background: #174e6b; }
+header h1 { margin: 0; letter-spacing: .12em; }
+header p { margin: 6px 0 0; color: #d7edf6; }
+main { width: min(1100px, 94vw); margin: 26px auto; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(250px, .8fr); gap: 20px; align-items: start; }
+section { min-width: 0; padding: 20px; border: 1px solid #d5e1e8; border-radius: 12px; background: white; box-shadow: 0 4px 16px #1c40500d; }
+h2 { margin: 0 0 16px; font-size: 1.1rem; letter-spacing: .06em; }
+#maze { display: grid; width: max-content; max-width: 100%; overflow: auto; border: 3px solid #183547; background: #183547; gap: 1px; }
+.cell { width: clamp(16px, 2.7vw, 27px); aspect-ratio: 1; background-color: #f5f8fa; background-image: linear-gradient(rgba(58,171,222,var(--odor,0)), rgba(58,171,222,var(--odor,0))); }
+.cell.wall { background: #24475b; }
+.cell.goal { background-color: #ffc857; box-shadow: inset 0 0 0 3px #e68a14; }
+.cell.fly { position: relative; z-index: 2; overflow: visible; background-color: #ffedcf; }
+.cell.visited:not(.fly):not(.goal) { position: relative; box-shadow: inset 0 0 0 1px #b9d4df; }
+.cell.visited:not(.fly):not(.goal)::after { content: ""; position: absolute; width: 3px; height: 3px; left: calc(50% - 1.5px); top: calc(50% - 1.5px); border-radius: 50%; background: #d37c4e; opacity: .42; }
+
+/* Small illustrated fly, facing north by default and rotated toward its heading. */
+.fly-sprite { position: absolute; z-index: 3; inset: 1px; display: block; transform: rotate(var(--heading-angle, 0deg)); }
+.fly-core { position: absolute; inset: 0; transform-origin: center; }
+.fly-body { position: absolute; z-index: 2; left: calc(50% - 3px); top: 5px; width: 6px; height: 16px; border: 1px solid #211d20; border-radius: 48% 48% 44% 44%; background: linear-gradient(90deg, #42313a 0 28%, #d89a38 29% 55%, #34242d 56% 100%); box-shadow: 0 1px 2px #182b3766; }
+.fly-head { position: absolute; left: -1px; top: -4px; width: 8px; height: 7px; border: 1px solid #271c27; border-radius: 50%; background: #342334; }
+.fly-eye { position: absolute; top: -2px; width: 2px; height: 2px; border-radius: 50%; background: #b83543; }
+.fly-eye.left { left: 0; } .fly-eye.right { right: 0; }
+.fly-antenna { position: absolute; top: -7px; width: 4px; height: 4px; border-top: 1px solid #27212a; }
+.fly-antenna.left { left: -2px; transform: rotate(-34deg); }
+.fly-antenna.right { right: -2px; transform: rotate(34deg); }
+.fly-wing { position: absolute; z-index: 1; top: 5px; width: 7px; height: 11px; border: 1px solid #668895aa; border-radius: 90% 25% 80% 30%; background: linear-gradient(140deg, #f7ffffdd, #9bc9d288); transform-origin: 90% 80%; }
+.fly-wing.left { left: 1px; transform: rotate(-32deg); }
+.fly-wing.right { right: 1px; transform: scaleX(-1) rotate(-32deg); }
+.fly-sprite::after { content: ""; position: absolute; left: 5px; right: 5px; bottom: 0; height: 3px; border-radius: 50%; background: #17304744; filter: blur(1px); }
+.sim-running .fly-core { animation: fly-bob .42s ease-in-out infinite alternate; }
+.sim-running .fly-wing.left { animation: wing-left .09s ease-in-out infinite alternate; }
+.sim-running .fly-wing.right { animation: wing-right .09s ease-in-out infinite alternate; }
+@keyframes fly-bob { from { transform: translateY(1px) scale(.94); } to { transform: translateY(-1px) scale(1.04); } }
+@keyframes wing-left { from { transform: rotate(-42deg) scaleX(.78); } to { transform: rotate(-17deg) scaleX(1.05); } }
+@keyframes wing-right { from { transform: scaleX(-1) rotate(-42deg) scaleX(.78); } to { transform: scaleX(-1) rotate(-17deg) scaleX(1.05); } }
+.legend { display: flex; flex-wrap: wrap; gap: 9px 16px; margin: 12px 0; color: #415b6c; font-size: .82rem; }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+.legend i { width: 12px; height: 12px; display: inline-block; border-radius: 3px; }
+.legend-fly { background: #ff6f61; } .legend-goal { background: #ffc857; } .legend-odor { background: #52b6df; }
+.controls { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 16px; }
+button { padding: 9px 15px; border: 0; border-radius: 7px; color: white; background: #176b8e; font-weight: 700; cursor: pointer; }
+button:hover { background: #104f6a; } button:focus-visible { outline: 3px solid #f0a833; outline-offset: 2px; }
+#pauseBtn { background: #657986; } #resetBtn { background: #39835d; }
+#status { margin: 15px 0 4px; font-weight: 700; }
+.readout { margin: 4px 0; color: #496273; font-size: .9rem; }
+.note { margin: -6px 0 14px; color: #617887; font-size: .86rem; line-height: 1.5; }
+#neuralInfo { line-height: 1.65; overflow-wrap: anywhere; }
+.neuron-row { padding: 6px 8px; border-bottom: 1px solid #e6eef2; }
+.neuron-row strong { color: #174e6b; }
+.sensory-row { margin-bottom: 12px; padding: 9px; border-radius: 7px; background: #f2f7fa; }
+@media (max-width: 760px) { main { grid-template-columns: 1fr; } .cell { width: clamp(15px, 5vw, 25px); } }
+@media (prefers-reduced-motion: reduce) { .sim-running .fly-core, .sim-running .fly-wing { animation-duration: .3s; } }
