@@ -3,66 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drosophila Maze Simulator</title>
+    <meta name="theme-color" content="#080f1b">
+    <title>Fly Neural Lab | Maze Simulation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-
-    <div class="container">
-
-        <header>
-            <h1>Drosophila Maze Simulator</h1>
-            <p>초파리 인공 신경망 기반 미로 탐색 시뮬레이션</p>
+    <div class="app-shell">
+        <header class="topbar">
+            <a class="brand" href="/" aria-label="Fly Neural Lab home">
+                <span class="brand-mark"><span></span><span></span><span></span></span>
+                <span class="brand-copy">
+                    <strong>FLY NEURAL LAB</strong>
+                    <small>NEUROSCIENCE SIMULATION</small>
+                </span>
+            </a>
+            <div class="topbar-meta">
+                <span class="system-indicator"><i></i> LOCAL SYSTEM</span>
+                <span class="version-label">RESEARCH BUILD / 01</span>
+            </div>
         </header>
 
-        <main>
-
-            <!-- 미로 -->
-            <section class="maze-section">
-                <h2>Maze</h2>
-
-                <div id="maze"></div>
+        <main class="dashboard">
+            <section class="page-heading">
+                <div>
+                    <div class="eyebrow">EXPERIMENTAL ENVIRONMENT <span> / </span> MAZE NAVIGATION</div>
+                    <h1>Neural Maze Simulation</h1>
+                    <p>초파리 신경 회로를 모사한 인공 신경망의 미로 탐색 시뮬레이션</p>
+                </div>
+                <div class="run-state">
+                    <span class="state-dot"></span>
+                    <span id="status">대기 중</span>
+                </div>
             </section>
 
-            <!-- 정보 -->
-            <section class="info-section">
-
-                <div class="info-box">
-                    <h2>Female Response</h2>
-
-                    <div class="response-value">
-                        <span id="responseValue">0</span>%
+            <section class="workspace">
+                <article class="panel maze-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <span class="panel-index">01 / ENVIRONMENT</span>
+                            <h2>Maze Environment</h2>
+                            <p>실시간 이동 경로 및 탐색 상태</p>
+                        </div>
+                        <span class="live-tag"><i></i> LIVE VIEW</span>
                     </div>
 
-                    <div class="response-bar">
-                        <div id="responseBar"></div>
+                    <div class="maze-stage">
+                        <div class="maze-frame">
+                            <div id="maze" aria-label="미로 시뮬레이션 화면"></div>
+                        </div>
                     </div>
-                </div>
 
-                <div class="info-box">
-                    <h2>Simulation Status</h2>
+                    <div class="maze-legend">
+                        <span><i class="legend-start"></i> START</span>
+                        <span><i class="legend-goal"></i> GOAL</span>
+                        <span><i class="legend-fly"></i> AGENT</span>
+                        <span><i class="legend-wall"></i> WALL</span>
+                    </div>
+                </article>
 
-                    <p>상태: <span id="status">대기 중</span></p>
-                    <p>방향: <span id="direction">-</span></p>
-                    <p>이동 시간: <span id="time">0.0</span> s</p>
-                    <p>이동 거리: <span id="distance">0</span></p>
-                </div>
+                <aside class="side-column">
+                    <article class="panel response-panel">
+                        <div class="panel-heading compact">
+                            <div>
+                                <span class="panel-index">02 / STIMULUS</span>
+                                <h2>Female Response</h2>
+                            </div>
+                            <span class="mini-icon">↗</span>
+                        </div>
+                        <div class="response-reading">
+                            <span id="responseValue">0</span><small>%</small>
+                        </div>
+                        <div class="response-track">
+                            <div id="responseBar"></div>
+                        </div>
+                        <div class="metric-foot">
+                            <span>Stimulus response level</span>
+                            <span class="metric-unit">0–100</span>
+                        </div>
+                    </article>
 
+                    <article class="panel telemetry-panel">
+                        <div class="panel-heading compact">
+                            <div>
+                                <span class="panel-index">03 / TELEMETRY</span>
+                                <h2>Simulation Data</h2>
+                            </div>
+                            <span class="telemetry-icon">⌁</span>
+                        </div>
+                        <div class="telemetry-list">
+                            <div class="telemetry-row">
+                                <span class="telemetry-label"><i class="data-icon">◉</i> Current direction</span>
+                                <strong id="direction">-</strong>
+                            </div>
+                            <div class="telemetry-row">
+                                <span class="telemetry-label"><i class="data-icon">◷</i> Elapsed time</span>
+                                <strong><span id="time">0.0</span><small> sec</small></strong>
+                            </div>
+                            <div class="telemetry-row">
+                                <span class="telemetry-label"><i class="data-icon">⌖</i> Travel distance</span>
+                                <strong><span id="distance">0</span><small> steps</small></strong>
+                            </div>
+                        </div>
+                    </article>
+
+                    <div class="note-card">
+                        <span class="note-mark">i</span>
+                        <p>시뮬레이션 데이터는 Python 엔진에서 전달된 현재 상태를 표시합니다.</p>
+                    </div>
+                </aside>
             </section>
 
+            <section class="control-panel">
+                <div class="control-copy">
+                    <span class="panel-index">04 / CONTROL</span>
+                    <strong>Simulation Control</strong>
+                    <small>시뮬레이션 실행 및 초기화</small>
+                </div>
+                <div class="controls">
+                    <button id="startButton" class="button button-primary"><span>▶</span> 시작</button>
+                    <button id="pauseButton" class="button button-secondary"><span>Ⅱ</span> 일시정지</button>
+                    <button id="resetButton" class="button button-quiet"><span>↻</span> 재시작</button>
+                </div>
+            </section>
+
+            <footer class="footer">
+                <span>FLY NEURAL LAB <b>·</b> DROSOPHILA-INSPIRED ARTIFICIAL NEURAL NETWORK</span>
+                <span>RESEARCH INTERFACE</span>
+            </footer>
         </main>
-
-        <!-- 버튼 -->
-        <div class="controls">
-            <button id="startButton">▶ 시작</button>
-            <button id="pauseButton">Ⅱ 일시정지</button>
-            <button id="resetButton">↻ 재시작</button>
-        </div>
-
     </div>
-
     <script src="script.js"></script>
-
 </body>
 </html>
