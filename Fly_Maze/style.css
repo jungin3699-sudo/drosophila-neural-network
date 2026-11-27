@@ -87,7 +87,7 @@ button { font: inherit; }
 }
 .maze-frame { width: min(100%, 680px); padding: 8px; border: 1px solid rgba(108, 142, 177, .2); border-radius: 6px; background: #0b1726; box-shadow: 0 0 34px rgba(18, 70, 108, .1); }
 #maze {
-    display: grid; width: 100%; aspect-ratio: 15 / 11; overflow: hidden;
+    display: grid; width: 100%; aspect-ratio: 15 / 13; overflow: hidden;
     border: 1px solid rgba(122, 155, 190, .24); background: #17283b;
 }
 .cell { min-width: 0; min-height: 0; position: relative; border: 1px solid rgba(123, 155, 189, .075); }
