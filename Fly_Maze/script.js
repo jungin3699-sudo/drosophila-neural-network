@@ -1,271 +1,338 @@
-// Biology-inspired baseline; these values are illustrative, not measured biological constants.
-function generateMaze(width = 15, height = 11) {
-    const grid = Array.from({ length: height }, () => Array(width).fill("#"));
-    const stack = [{ x: 1, y: 1 }];
-    grid[1][1] = ".";
-    const steps = [{ x: 0, y: -2 }, { x: 2, y: 0 }, { x: 0, y: 2 }, { x: -2, y: 0 }];
-    while (stack.length) {
-        const current = stack[stack.length - 1];
-        const shuffled = [...steps];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        let carved = false;
-        for (const d of shuffled) {
-            const nx = current.x + d.x, ny = current.y + d.y;
-            if (nx > 0 && nx < width - 1 && ny > 0 && ny < height - 1 && grid[ny][nx] === "#") {
-                grid[current.y + d.y / 2][current.x + d.x / 2] = ".";
-                grid[ny][nx] = ".";
-                stack.push({ x: nx, y: ny });
-                carved = true;
-                break;
-            }
-        }
-        if (!carved) stack.pop();
-    }
-    // A few extra passages create loops, so the fly can encounter alternatives.
-    for (let y = 1; y < height - 1; y++) for (let x = 1; x < width - 1; x++) {
-        if (grid[y][x] !== "#" || Math.random() >= 0.10) continue;
-        const joinsHorizontal = grid[y][x - 1] !== "#" && grid[y][x + 1] !== "#";
-        const joinsVertical = grid[y - 1][x] !== "#" && grid[y + 1][x] !== "#";
-        if (joinsHorizontal || joinsVertical) grid[y][x] = ".";
-    }
-    grid[1][1] = "S";
-    grid[height - 2][width - 2] = "G";
-    return grid.map(row => row.join(""));
-}
+// Fly Neural Lab - GitHub Pages edition
+// Python simulation.py의 이동·자극·신경 활성도 계산을 브라우저 JavaScript로 옮긴 버전.
 
 const mazeElement = document.getElementById("maze");
+const responseValue = document.getElementById("responseValue");
+const responseBar = document.getElementById("responseBar");
 const statusElement = document.getElementById("status");
-const behaviorElement = document.getElementById("behaviorMode");
-const stepElement = document.getElementById("stepCounter");
-const neuralInfo = document.getElementById("neuralInfo");
-const startBtn = document.getElementById("startBtn");
-const pauseBtn = document.getElementById("pauseBtn");
-const resetBtn = document.getElementById("resetBtn");
+const directionElement = document.getElementById("direction");
+const timeElement = document.getElementById("time");
+const distanceElement = document.getElementById("distance");
+const activationValue = document.getElementById("activationValue");
+const startButton = document.getElementById("startButton");
+const pauseButton = document.getElementById("pauseButton");
+const resetButton = document.getElementById("resetButton");
 
-const DIRECTIONS = [
-    { x: 0, y: -1, name: "북쪽", index: 0 },
-    { x: 1, y: 0, name: "동쪽", index: 1 },
-    { x: 0, y: 1, name: "남쪽", index: 2 },
-    { x: -1, y: 0, name: "서쪽", index: 3 }
+const INITIAL_MAZE = [
+    "###############",
+    "#S    #       #",
+    "### # # ##### #",
+    "#   # #     # #",
+    "# ### ##### # #",
+    "# #       #   #",
+    "# # ##### ### #",
+    "#   #   #     #",
+    "##### # ##### #",
+    "#     #       #",
+    "# ### ####### #",
+    "#   #       #G#",
+    "###############"
 ];
-// The goal is on the east side. Air carries its odor toward the west;
-// movement upwind therefore points east, toward the source.
-const WIND = { x: -1, y: 0 };
-const ODOR_THRESHOLD = 0.025;
-const DIFFUSION_RATE = 0.10, ADVECTION_RATE = 0.22, DECAY_RATE = 0.03;
 
-let maze = [], odorMap = [], timer = null, running = false, stepCount = 0;
-let fly = { x: 1, y: 1, heading: 1 };
-let goal = { x: 13, y: 9 }, lastOdor = 0, odorLossSteps = 0;
-let visitedCounts = new Map();
+const NEURONS = [
+    "SMP598", "SMP702m", "pC1x_a", "SMP052",
+    "VES053", "DNa11", "Sternal adductor MN"
+];
+const CONNECTION_WEIGHTS = [1152, 444, 643, 453, 423, 10];
+const DIRECTIONS = [
+    { row: -1, col: 0, symbol: "↑" },
+    { row: 0, col: 1, symbol: "→" },
+    { row: 1, col: 0, symbol: "↓" },
+    { row: 0, col: -1, symbol: "←" }
+];
 
-function key(x, y) { return x + "," + y; }
-function isOpen(x, y) {
-    const cell = maze[y]?.[x];
-    return cell === "." || cell === "S" || cell === "G";
+let maze = [];
+let start = { row: 1, col: 1 };
+let goal = { row: 11, col: 13 };
+let position = { row: 1, col: 1 };
+let direction = 1;
+let stepCount = 0;
+let distance = 0;
+let visited = new Set();
+let finished = false;
+let success = false;
+let lastAction = null;
+let lastProbabilities = { forward: 0, left: 0, right: 0 };
+let lastStimulus = 0;
+let lastActivation = 0;
+
+let running = false;
+let paused = false;
+let timer = null;
+let startTime = 0;
+let elapsedTime = 0;
+
+function positionKey(row, col) {
+    return row + "," + col;
 }
-function getOdor(x, y) { return isOpen(x, y) ? (odorMap[y]?.[x] ?? 0) : 0; }
 
-function calculateOdorDiffusion() {
-    const height = maze.length, width = maze[0].length;
-    odorMap = Array.from({ length: height }, () => Array(width).fill(0));
-    odorMap[goal.y][goal.x] = 1;
-    // Odor spreads only through open cells; advection carries it downwind.
-    for (let iteration = 0; iteration < 900; iteration++) {
-        const next = Array.from({ length: height }, () => Array(width).fill(0));
-        for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
-            if (!isOpen(x, y)) continue;
-            if (x === goal.x && y === goal.y) { next[y][x] = 1; continue; }
-            let neighborSum = 0;
-            for (const d of DIRECTIONS) if (isOpen(x + d.x, y + d.y)) neighborSum += odorMap[y + d.y][x + d.x];
-            const upwindX = x - WIND.x, upwindY = y - WIND.y;
-            const advected = isOpen(upwindX, upwindY) ? odorMap[upwindY][upwindX] : 0;
-            const retained = 1 - 4 * DIFFUSION_RATE - ADVECTION_RATE - DECAY_RATE;
-            next[y][x] = Math.max(0, Math.min(1,
-                odorMap[y][x] * retained + DIFFUSION_RATE * neighborSum + ADVECTION_RATE * advected));
+function findEndpoints() {
+    for (let row = 0; row < maze.length; row++) {
+        for (let col = 0; col < maze[row].length; col++) {
+            if (maze[row][col] === "S") start = { row, col };
+            if (maze[row][col] === "G") goal = { row, col };
         }
-        odorMap = next;
     }
 }
 
-function relativeObstacle(offset) {
-    const d = DIRECTIONS[(fly.heading + offset + 4) % 4];
-    return isOpen(fly.x + d.x, fly.y + d.y) ? 0 : 1;
-}
-
-function getCandidates() {
-    return DIRECTIONS.flatMap(d => {
-        const x = fly.x + d.x, y = fly.y + d.y;
-        if (!isOpen(x, y)) return [];
-        const odor = getOdor(x, y);
-        const neural = calculateNeuralActivity({
-            front_obstacle: relativeObstacle(0),
-            left_obstacle: relativeObstacle(-1),
-            right_obstacle: relativeObstacle(1),
-            female_stimulus: odor
-        });
-        return [{ x, y, direction: d, odor, activations: neural.activations }];
-    });
-}
-
-function dot(a, b) { return a.x * b.x + a.y * b.y; }
-function chooseCandidate(candidates, currentOdor) {
-    const odorDetected = currentOdor >= ODOR_THRESHOLD;
-    const trend = currentOdor - lastOdor;
-    const crosswind = { x: -WIND.y, y: WIND.x };
-    const upwind = { x: -WIND.x, y: -WIND.y };
-    const heading = DIRECTIONS[fly.heading];
-    const scored = candidates.map(candidate => {
-        const visits = visitedCounts.get(key(candidate.x, candidate.y)) ?? 0;
-        let score = -Math.min(visits, 5) * 0.08 + dot(candidate.direction, heading) * 0.12;
-        if (odorDetected) {
-            score += (candidate.odor - currentOdor) * 7;
-            score += dot(candidate.direction, upwind) * 0.28;
-            if (trend > 0.002) score += dot(candidate.direction, heading) * 0.12;
-            else if (trend < -0.002) score += Math.abs(dot(candidate.direction, crosswind)) * 0.22;
-        } else {
-            score += Math.abs(dot(candidate.direction, crosswind)) * 0.42 + Math.random() * 0.10;
+function maxGoalDistance() {
+    let maxDistance = 1;
+    for (let row = 0; row < maze.length; row++) {
+        for (let col = 0; col < maze[row].length; col++) {
+            if (maze[row][col] !== "#") {
+                maxDistance = Math.max(
+                    maxDistance,
+                    Math.abs(row - goal.row) + Math.abs(col - goal.col)
+                );
+            }
         }
-        return { candidate, score };
-    });
-    const temperature = 0.24, maxScore = Math.max(...scored.map(item => item.score));
-    const weights = scored.map(item => Math.exp((item.score - maxScore) / temperature));
-    let pick = Math.random() * weights.reduce((sum, value) => sum + value, 0);
-    for (let i = 0; i < scored.length; i++) {
-        pick -= weights[i];
-        if (pick <= 0) return scored[i].candidate;
     }
-    return scored[scored.length - 1].candidate;
+    return maxDistance;
 }
 
-function updateNeuralInfo(candidate, currentOdor) {
-    neuralInfo.replaceChildren();
-    const sensory = document.createElement("div");
-    sensory.className = "sensory-row";
-    sensory.textContent = "현재 냄새 " + currentOdor.toFixed(3) +
-        " · 다음 칸 냄새 " + candidate.odor.toFixed(3) +
-        " · 선택 방향 " + candidate.direction.name;
-    neuralInfo.appendChild(sensory);
-    for (const [name, value] of Object.entries(candidate.activations)) {
-        const row = document.createElement("div");
-        row.className = "neuron-row";
-        const label = document.createElement("strong");
-        label.textContent = name;
-        row.append(label, document.createTextNode(": " + value.toFixed(3)));
-        neuralInfo.appendChild(row);
+function femaleStimulus(point) {
+    const distanceToGoal =
+        Math.abs(point.row - goal.row) + Math.abs(point.col - goal.col);
+    const normalized = Math.min(distanceToGoal / maxGoalDistance(), 1);
+    return 0.05 + 0.95 * (1 - normalized);
+}
+
+function canMove(point, heading) {
+    const vector = DIRECTIONS[heading];
+    const row = point.row + vector.row;
+    const col = point.col + vector.col;
+    return row >= 0 && row < maze.length &&
+        col >= 0 && col < maze[0].length &&
+        maze[row][col] !== "#";
+}
+
+function moveTo(point, heading) {
+    const vector = DIRECTIONS[heading];
+    return { row: point.row + vector.row, col: point.col + vector.col };
+}
+
+function calculateActivation(stimulus) {
+    const activation = {};
+    NEURONS.forEach(name => { activation[name] = 0; });
+    activation[NEURONS[0]] = stimulus;
+
+    for (let i = 0; i < NEURONS.length - 1; i++) {
+        const transmission = CONNECTION_WEIGHTS[i] /
+            (CONNECTION_WEIGHTS[i] + 100);
+        activation[NEURONS[i + 1]] = activation[NEURONS[i]] * transmission;
     }
+    return activation;
+}
+
+function senseEnvironment() {
+    return {
+        front: canMove(position, direction),
+        left: canMove(position, (direction + 3) % 4),
+        right: canMove(position, (direction + 1) % 4)
+    };
+}
+
+function chooseAction(motorActivation) {
+    const environment = senseEnvironment();
+    let forwardScore = 0.50;
+    let leftScore = 0.25;
+    let rightScore = 0.25;
+
+    if (!environment.front) {
+        forwardScore *= 0.05;
+        leftScore += 0.25;
+        rightScore += 0.25;
+    }
+    if (!environment.left) leftScore *= 0.1;
+    if (!environment.right) rightScore *= 0.1;
+
+    forwardScore += motorActivation * 0.2;
+    leftScore += motorActivation * 0.1;
+    rightScore += motorActivation * 0.1;
+
+    const actionDirections = {
+        forward: direction,
+        left: (direction + 3) % 4,
+        right: (direction + 1) % 4
+    };
+    const attractionGain = motorActivation * 3.0;
+
+    for (const [action, heading] of Object.entries(actionDirections)) {
+        if (!canMove(position, heading)) continue;
+        const nextPosition = moveTo(position, heading);
+        const signalAhead = femaleStimulus(nextPosition);
+        if (action === "forward") forwardScore += attractionGain * signalAhead;
+        else if (action === "left") leftScore += attractionGain * signalAhead;
+        else rightScore += attractionGain * signalAhead;
+    }
+
+    const noise = 0.10;
+    forwardScore = Math.max(0, forwardScore + (Math.random() * 2 - 1) * noise);
+    leftScore = Math.max(0, leftScore + (Math.random() * 2 - 1) * noise);
+    rightScore = Math.max(0, rightScore + (Math.random() * 2 - 1) * noise);
+
+    const scores = {
+        forward: forwardScore,
+        left: leftScore,
+        right: rightScore
+    };
+    const total = forwardScore + leftScore + rightScore || 1;
+    const probabilities = {
+        forward: scores.forward / total,
+        left: scores.left / total,
+        right: scores.right / total
+    };
+
+    let pick = Math.random();
+    for (const action of ["forward", "left", "right"]) {
+        pick -= probabilities[action];
+        if (pick <= 0) return { action, probabilities };
+    }
+    return { action: "right", probabilities };
+}
+
+function resetSimulationState() {
+    maze = INITIAL_MAZE.map(row => row.split(""));
+    findEndpoints();
+    position = { ...start };
+    direction = 1;
+    stepCount = 0;
+    distance = 0;
+    visited = new Set([positionKey(position.row, position.col)]);
+    finished = false;
+    success = false;
+    lastAction = null;
+    lastProbabilities = { forward: 0, left: 0, right: 0 };
+    lastStimulus = 0;
+    lastActivation = 0;
+    elapsedTime = 0;
+    timeElement.textContent = "0.0";
+    renderScreen();
+    statusElement.textContent = "대기 중";
+}
+
+function stepSimulation() {
+    if (finished) return;
+
+    stepCount++;
+    const stimulus = femaleStimulus(position);
+    const activation = calculateActivation(stimulus);
+    const motorActivation = activation["Sternal adductor MN"];
+    const selected = chooseAction(motorActivation);
+    lastAction = selected.action;
+    lastProbabilities = selected.probabilities;
+    lastStimulus = stimulus;
+    lastActivation = motorActivation;
+
+    if (lastAction === "left") direction = (direction + 3) % 4;
+    else if (lastAction === "right") direction = (direction + 1) % 4;
+
+    if (canMove(position, direction)) {
+        position = moveTo(position, direction);
+        distance++;
+    }
+
+    visited.add(positionKey(position.row, position.col));
+
+    if (position.row === goal.row && position.col === goal.col) {
+        success = true;
+        finished = true;
+        stopTimer();
+        statusElement.textContent = "목표 도착";
+    }
+    renderScreen();
 }
 
 function renderMaze() {
     mazeElement.replaceChildren();
-    mazeElement.style.gridTemplateColumns = "repeat(" + maze[0].length + ", var(--cell-size))";
-    for (let y = 0; y < maze.length; y++) for (let x = 0; x < maze[y].length; x++) {
-        const cell = document.createElement("div");
-        cell.className = "cell";
-        if (!isOpen(x, y)) cell.classList.add("wall");
-        if (x === goal.x && y === goal.y) cell.classList.add("goal");
-        if ((visitedCounts.get(key(x, y)) ?? 0) > 0) cell.classList.add("visited");
-        if (x === fly.x && y === fly.y) {
-            cell.classList.add("fly");
-            const sprite = document.createElement("span");
-            sprite.className = "fly-sprite";
-            sprite.setAttribute("role", "img");
-            sprite.setAttribute("aria-label", "날파리");
-            sprite.style.setProperty("--heading-angle", (fly.heading * 90) + "deg");
+    mazeElement.style.gridTemplateColumns = "repeat(" + maze[0].length + ", minmax(0, 1fr))";
+    mazeElement.style.gridTemplateRows = "repeat(" + maze.length + ", minmax(0, 1fr))";
 
-            const wingLeft = document.createElement("i");
-            wingLeft.className = "fly-wing left";
-            const wingRight = document.createElement("i");
-            wingRight.className = "fly-wing right";
-            const core = document.createElement("span");
-            core.className = "fly-core";
-            const body = document.createElement("i");
-            body.className = "fly-body";
-            for (const part of ["fly-head", "fly-eye left", "fly-eye right", "fly-antenna left", "fly-antenna right"]) {
-                const detail = document.createElement("i");
-                detail.className = part;
-                body.appendChild(detail);
-            }
-            core.appendChild(body);
-            sprite.append(wingLeft, wingRight, core);
-            cell.appendChild(sprite);
+    for (let row = 0; row < maze.length; row++) {
+        for (let col = 0; col < maze[row].length; col++) {
+            const cell = document.createElement("div");
+            cell.className = "cell " + (maze[row][col] === "#" ? "wall" : "path");
+            if (maze[row][col] === "S") cell.classList.add("start");
+            if (maze[row][col] === "G") cell.classList.add("goal");
+            if (visited.has(positionKey(row, col))) cell.classList.add("visited");
+            if (position.row === row && position.col === col) cell.classList.add("fly");
+            mazeElement.appendChild(cell);
         }
-        if (isOpen(x, y) && !(x === goal.x && y === goal.y)) {
-            cell.style.setProperty("--odor", Math.min(0.72, getOdor(x, y) * 1.5).toFixed(3));
-        }
-        mazeElement.appendChild(cell);
     }
 }
 
-function moveFly() {
-    if (fly.x === goal.x && fly.y === goal.y) {
-        statusElement.textContent = "목표 냄새 발생 지점에 도착했습니다.";
-        pauseSimulation(); return;
-    }
-    const currentOdor = getOdor(fly.x, fly.y), candidates = getCandidates();
-    if (!candidates.length) { statusElement.textContent = "이동할 수 있는 통로가 없습니다."; pauseSimulation(); return; }
-    const selected = chooseCandidate(candidates, currentOdor);
-    fly.heading = selected.direction.index;
-    fly.x = selected.x; fly.y = selected.y; stepCount++;
-    const positionKey = key(fly.x, fly.y);
-    visitedCounts.set(positionKey, (visitedCounts.get(positionKey) ?? 0) + 1);
+function renderInformation() {
+    responseValue.textContent = (lastStimulus * 100).toFixed(1);
+    responseBar.style.width = Math.max(0, Math.min(100, lastStimulus * 100)) + "%";
+    directionElement.textContent = DIRECTIONS[direction].symbol;
+    distanceElement.textContent = String(distance);
+    activationValue.textContent = lastActivation.toFixed(3);
+    if (!success && !paused && running) statusElement.textContent = "실행 중";
+    else if (!success && paused) statusElement.textContent = "일시정지";
+    else if (!success && !running) statusElement.textContent = "대기 중";
+}
 
-    if (currentOdor >= ODOR_THRESHOLD) {
-        odorLossSteps = 0;
-        behaviorElement.textContent = currentOdor - lastOdor < -0.002
-            ? "행동 상태: 냄새가 약해져 바람 가로 탐색"
-            : "행동 상태: 냄새 감지 · 바람 거슬러 이동";
-    } else {
-        odorLossSteps++;
-        behaviorElement.textContent = "행동 상태: 냄새 소실 · 바람 가로 탐색 (" + odorLossSteps + "회)";
-    }
-    updateNeuralInfo(selected, currentOdor);
-    lastOdor = currentOdor;
-    stepElement.textContent = "이동 횟수: " + stepCount;
+function renderScreen() {
     renderMaze();
-    if (fly.x === goal.x && fly.y === goal.y) {
-        statusElement.textContent = "목표 냄새 발생 지점에 도착했습니다.";
-        pauseSimulation();
-    } else if (stepCount >= 500) {
-        statusElement.textContent = "500회 이동에 도달했습니다. 새 미로로 다시 시작할 수 있습니다.";
-        pauseSimulation();
-    } else statusElement.textContent = "탐색 중 · 진행 방향: " + selected.direction.name;
+    renderInformation();
+}
+
+function updateClock() {
+    if (!running || paused) return;
+    elapsedTime = (performance.now() - startTime) / 1000;
+    timeElement.textContent = elapsedTime.toFixed(1);
+}
+
+function runLoop() {
+    if (!running || paused || finished) return;
+    stepSimulation();
+    updateClock();
+    if (running && !finished) timer = setTimeout(runLoop, 500);
+}
+
+function stopTimer() {
+    running = false;
+    paused = false;
+    if (timer !== null) clearTimeout(timer);
+    timer = null;
 }
 
 function startSimulation() {
-    if (running) return;
+    if (running && !paused) return;
+
+    if (paused) {
+        paused = false;
+        running = true;
+        startTime = performance.now() - elapsedTime * 1000;
+        statusElement.textContent = "실행 중";
+        runLoop();
+        return;
+    }
+
+    resetSimulationState();
     running = true;
-    document.body.classList.add("sim-running");
-    statusElement.textContent = "바람과 냄새 신호를 이용해 탐색 중입니다.";
-    timer = setInterval(moveFly, 450);
-}
-function pauseSimulation() {
-    running = false;
-    document.body.classList.remove("sim-running");
-    if (timer !== null) clearInterval(timer);
-    timer = null;
-}
-function resetSimulation() {
-    pauseSimulation();
-    maze = generateMaze().map(row => row.split(""));
-    const startY = maze.findIndex(row => row.includes("S"));
-    const startX = maze[startY].indexOf("S");
-    goal = { x: maze[0].length - 2, y: maze.length - 2 };
-    fly = { x: startX, y: startY, heading: 1 };
-    visitedCounts = new Map([[key(fly.x, fly.y), 1]]);
-    stepCount = 0; lastOdor = 0; odorLossSteps = 0;
-    calculateOdorDiffusion();
-    statusElement.textContent = "시작 버튼을 눌러 탐색하세요.";
-    behaviorElement.textContent = "행동 상태: 대기";
-    stepElement.textContent = "이동 횟수: 0";
-    neuralInfo.textContent = "미로를 시작하면 감각 입력과 회로 활성도를 표시합니다.";
-    renderMaze();
+    startTime = performance.now();
+    statusElement.textContent = "실행 중";
+    runLoop();
 }
 
-startBtn.addEventListener("click", startSimulation);
-pauseBtn.addEventListener("click", pauseSimulation);
-resetBtn.addEventListener("click", resetSimulation);
+function pauseSimulation() {
+    if (!running) return;
+    updateClock();
+    paused = true;
+    running = false;
+    if (timer !== null) clearTimeout(timer);
+    timer = null;
+    statusElement.textContent = "일시정지";
+}
+
+function resetSimulation() {
+    stopTimer();
+    resetSimulationState();
+}
+
+startButton.addEventListener("click", startSimulation);
+pauseButton.addEventListener("click", pauseSimulation);
+resetButton.addEventListener("click", resetSimulation);
+
 resetSimulation();
