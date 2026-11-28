@@ -1,139 +1,150 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#080f1b">
-    <title>Fly Neural Lab | Maze Simulation</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080d16">
+  <meta name="description" content="Drosophila-inspired neural circuit maze navigation research interface">
+  <title>Fly Neural Lab — Research Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="app-shell">
-        <header class="topbar">
-            <a class="brand" href="./" aria-label="Fly Neural Lab home">
-                <span class="brand-mark"><span></span><span></span><span></span></span>
-                <span class="brand-copy">
-                    <strong>FLY NEURAL LAB</strong>
-                    <small>NEUROSCIENCE SIMULATION</small>
-                </span>
-            </a>
-            <div class="topbar-meta">
-                <span class="system-indicator"><i></i> GITHUB PAGES</span>
-                <span class="version-label">RESEARCH BUILD / 02</span>
+<div class="app">
+  <aside class="rail">
+    <a class="brand-mark" href="./" aria-label="Fly Neural Lab"><span class="wing wing-a"></span><span class="wing wing-b"></span><span class="brand-core"></span></a>
+    <div class="rail-rule"></div>
+    <div class="rail-icon active" title="실험 대시보드">⌘</div>
+    <div class="rail-icon" title="신경 회로">⌁</div>
+    <div class="rail-icon" title="데이터 분석">▥</div>
+    <div class="rail-spacer"></div>
+    <div class="rail-version">FNL<br><b>02.6</b></div>
+  </aside>
+
+  <div class="main-shell">
+    <header class="topbar">
+      <div class="brand-lockup">
+        <div class="brand-name">FLY NEURAL LAB <span>RESEARCH CONSOLE</span></div>
+        <div class="breadcrumb">PROJECTS <i>/</i> DROSOPHILA <i>/</i> <b>MAZE NAVIGATION</b></div>
+      </div>
+      <div class="top-actions">
+        <div class="build-label"><span class="build-dot"></span> WEB EXPERIMENT BUILD</div>
+        <div class="avatar">F</div>
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="intro">
+        <div>
+          <div class="section-kicker"><span class="kicker-line"></span> EXPERIMENT 01 <span class="kicker-muted">/ NEURAL NAVIGATION</span></div>
+          <h1>Maze Navigation <em>Study</em></h1>
+          <p class="intro-copy">초파리 신경 회로 기반 인공 신경망의 미로 탐색 과정 분석</p>
+        </div>
+        <div class="run-state"><span class="state-dot"></span><span id="status" role="status">대기 중</span><small>SIMULATION STATUS</small></div>
+      </section>
+
+      <section class="summary-strip">
+        <div class="summary-item"><span class="summary-label">MODEL</span><strong>Male CNS <small>INSPIRED</small></strong></div>
+        <div class="summary-item"><span class="summary-label">NETWORK</span><strong>7 <small>NEURONS</small></strong></div>
+        <div class="summary-item"><span class="summary-label">ENVIRONMENT</span><strong>15 × 13 <small>GRID</small></strong></div>
+        <div class="summary-item"><span class="summary-label">TARGET SIGNAL</span><strong class="accent-text">FEMALE <small>STIMULUS</small></strong></div>
+        <div class="summary-item summary-id"><span class="summary-label">SESSION ID</span><strong>FNL-MZ-001</strong></div>
+      </section>
+
+      <section class="primary-grid">
+        <article class="surface maze-surface">
+          <div class="surface-head">
+            <div class="surface-title"><span class="index">01</span><div><h2>Environment</h2><p>Spatial navigation / live agent tracking</p></div></div>
+            <div class="live-pill"><span></span> LIVE CANVAS</div>
+          </div>
+          <div class="maze-wrap">
+            <div class="axis axis-top"><span>COL 01</span><span>COL 08</span><span>COL 15</span></div>
+            <div class="maze-viewport"><div id="maze" aria-label="미로 시뮬레이션 화면"></div></div>
+            <div class="axis axis-bottom"><span>START NODE</span><span class="axis-center">NAVIGATION FIELD</span><span>GOAL NODE</span></div>
+          </div>
+          <div class="legend">
+            <span><i class="lg-start"></i> Start</span><span><i class="lg-goal"></i> Target</span><span><i class="lg-agent"></i> Neural agent</span><span><i class="lg-trail"></i> Visited path</span><span><i class="lg-wall"></i> Obstacle</span>
+          </div>
+        </article>
+
+        <aside class="insight-column">
+          <article class="surface stimulus-card">
+            <div class="surface-head small-head"><div class="surface-title"><span class="index">02</span><div><h2>Stimulus response</h2><p>Female-related signal intensity</p></div></div><span class="corner-mark">↗</span></div>
+            <div class="stimulus-number"><strong id="responseValue">0.0</strong><span>%</span></div>
+            <div class="meter"><div id="responseBar"></div><i></i></div>
+            <div class="meter-scale"><span>0.0</span><span>INPUT INTENSITY</span><span>100.0</span></div>
+            <div class="signal-caption"><span class="signal-indicator"></span> Sensory input <b>ACTIVE MONITOR</b></div>
+          </article>
+
+          <article class="surface telemetry-card">
+            <div class="surface-head small-head"><div class="surface-title"><span class="index">03</span><div><h2>Run telemetry</h2><p>Current simulation metrics</p></div></div><span class="telemetry-symbol">▤</span></div>
+            <div class="metric-grid">
+              <div class="metric"><span>ELAPSED TIME</span><strong><b id="time">0.0</b><small>SEC</small></strong></div>
+              <div class="metric"><span>TRAVEL DISTANCE</span><strong><b id="distance">0</b><small>STEPS</small></strong></div>
+              <div class="metric"><span>HEADING</span><strong class="heading-value" id="direction">→</strong></div>
+              <div class="metric"><span>MOTOR OUTPUT</span><strong><b id="activationValue">0.000</b><small>ACT.</small></strong></div>
             </div>
-        </header>
+          </article>
 
-        <main class="dashboard">
-            <section class="page-heading">
-                <div>
-                    <div class="eyebrow">EXPERIMENTAL ENVIRONMENT <span> / </span> MAZE NAVIGATION</div>
-                    <h1>Neural Maze Simulation</h1>
-                    <p>초파리 신경 회로를 모사한 인공 신경망의 미로 탐색 시뮬레이션</p>
-                </div>
-                <div class="run-state">
-                    <span class="state-dot"></span>
-                    <span id="status" role="status">대기 중</span>
-                </div>
-            </section>
+          <article class="surface control-card">
+            <div class="control-heading"><div><span class="index">04</span><h2>Experiment control</h2></div><span class="control-state">READY</span></div>
+            <div class="controls">
+              <button id="startButton" class="btn btn-run" type="button"><span>▶</span> Run simulation</button>
+              <button id="pauseButton" class="btn btn-pause" type="button"><span>Ⅱ</span> Pause</button>
+              <button id="resetButton" class="btn btn-reset" type="button"><span>↺</span> Reset</button>
+            </div>
+          </article>
+        </aside>
+      </section>
 
-            <section class="workspace">
-                <article class="panel maze-panel">
-                    <div class="panel-heading">
-                        <div>
-                            <span class="panel-index">01 / ENVIRONMENT</span>
-                            <h2>Maze Environment</h2>
-                            <p>실시간 이동 경로 및 탐색 상태</p>
-                        </div>
-                        <span class="live-tag"><i></i> LIVE VIEW</span>
-                    </div>
-                    <div class="maze-stage">
-                        <div class="maze-frame">
-                            <div id="maze" aria-label="미로 시뮬레이션 화면"></div>
-                        </div>
-                    </div>
-                    <div class="maze-legend">
-                        <span><i class="legend-start"></i> START</span>
-                        <span><i class="legend-goal"></i> GOAL</span>
-                        <span><i class="legend-fly"></i> AGENT</span>
-                        <span><i class="legend-wall"></i> WALL</span>
-                    </div>
-                </article>
+      <section class="surface network-surface">
+        <div class="surface-head network-head">
+          <div class="surface-title"><span class="index">05</span><div><h2>Neural pathway</h2><p>Sequential signal propagation across selected cell types</p></div></div>
+          <div class="network-meta"><span class="network-dot"></span> 7 SELECTED NODES <i>·</i> 6 CONNECTIONS</div>
+        </div>
+        <div class="pathway" id="neuralPathway">
+          <div class="neuron"><span class="neuron-type">INPUT</span><strong>SMP598</strong><div class="neuron-bar"><i></i></div><small>01</small></div>
+          <div class="synapse"><span>1,152</span><i></i></div>
+          <div class="neuron"><span class="neuron-type">INTERNEURON</span><strong>SMP702m</strong><div class="neuron-bar"><i></i></div><small>02</small></div>
+          <div class="synapse"><span>444</span><i></i></div>
+          <div class="neuron"><span class="neuron-type">INTEGRATION</span><strong>pC1x_a</strong><div class="neuron-bar"><i></i></div><small>03</small></div>
+          <div class="synapse"><span>643</span><i></i></div>
+          <div class="neuron"><span class="neuron-type">INTERNEURON</span><strong>SMP052</strong><div class="neuron-bar"><i></i></div><small>04</small></div>
+          <div class="synapse"><span>453</span><i></i></div>
+          <div class="neuron"><span class="neuron-type">PRE-MOTOR</span><strong>VES053</strong><div class="neuron-bar"><i></i></div><small>05</small></div>
+          <div class="synapse"><span>423</span><i></i></div>
+          <div class="neuron"><span class="neuron-type">MOTOR PATH</span><strong>DNa11</strong><div class="neuron-bar"><i></i></div><small>06</small></div>
+          <div class="synapse"><span>10</span><i></i></div>
+          <div class="neuron neuron-output"><span class="neuron-type">OUTPUT</span><strong>Motor MN</strong><div class="neuron-bar"><i></i></div><small>07</small></div>
+        </div>
+        <div class="network-foot"><span>CONNECTION WEIGHTS <b>neuPrint reference values</b></span><span>Signal visualization is an explanatory representation of the selected pathway.</span></div>
+      </section>
 
-                <aside class="side-column">
-                    <article class="panel response-panel">
-                        <div class="panel-heading compact">
-                            <div>
-                                <span class="panel-index">02 / STIMULUS</span>
-                                <h2>Female Response</h2>
-                            </div>
-                            <span class="mini-icon">↗</span>
-                        </div>
-                        <div class="response-reading">
-                            <span id="responseValue">0.0</span><small>%</small>
-                        </div>
-                        <div class="response-track"><div id="responseBar"></div></div>
-                        <div class="metric-foot">
-                            <span>Stimulus response level</span>
-                            <span class="metric-unit">0–100</span>
-                        </div>
-                    </article>
-
-                    <article class="panel telemetry-panel">
-                        <div class="panel-heading compact">
-                            <div>
-                                <span class="panel-index">03 / TELEMETRY</span>
-                                <h2>Simulation Data</h2>
-                            </div>
-                            <span class="telemetry-icon">⌁</span>
-                        </div>
-                        <div class="telemetry-list">
-                            <div class="telemetry-row">
-                                <span class="telemetry-label"><i class="data-icon">◉</i> Current direction</span>
-                                <strong id="direction">→</strong>
-                            </div>
-                            <div class="telemetry-row">
-                                <span class="telemetry-label"><i class="data-icon">◷</i> Elapsed time</span>
-                                <strong><span id="time">0.0</span><small> sec</small></strong>
-                            </div>
-                            <div class="telemetry-row">
-                                <span class="telemetry-label"><i class="data-icon">⌖</i> Travel distance</span>
-                                <strong><span id="distance">0</span><small> steps</small></strong>
-                            </div>
-                            <div class="telemetry-row">
-                                <span class="telemetry-label"><i class="data-icon">∿</i> Motor activation</span>
-                                <strong><span id="activationValue">0.000</span></strong>
-                            </div>
-                        </div>
-                    </article>
-                    <div class="note-card">
-                        <span class="note-mark">i</span>
-                        <p>Google Male CNS에서 참고한 신경 연결 가중치를 바탕으로 활성도를 계산합니다. 이 페이지는 브라우저 내 JavaScript로 시뮬레이션을 실행합니다.</p>
-                    </div>
-                </aside>
-            </section>
-
-            <section class="control-panel">
-                <div class="control-copy">
-                    <span class="panel-index">04 / CONTROL</span>
-                    <strong>Simulation Control</strong>
-                    <small>시뮬레이션 실행 및 초기화</small>
-                </div>
-                <div class="controls">
-                    <button id="startButton" class="button button-primary" type="button"><span>▶</span> 시작</button>
-                    <button id="pauseButton" class="button button-secondary" type="button"><span>Ⅱ</span> 일시정지</button>
-                    <button id="resetButton" class="button button-quiet" type="button"><span>↻</span> 재시작</button>
-                </div>
-            </section>
-
-            <footer class="footer">
-                <span>FLY NEURAL LAB <b>·</b> DROSOPHILA-INSPIRED ARTIFICIAL NEURAL NETWORK</span>
-                <span>GITHUB PAGES / RESEARCH INTERFACE</span>
-            </footer>
-        </main>
-    </div>
-    <script src="script.js"></script>
+      <footer class="footer"><span>FLY NEURAL LAB <b>×</b> DROSOPHILA-INSPIRED COMPUTATIONAL NEUROSCIENCE</span><span>GITHUB PAGES <i>·</i> RESEARCH INTERFACE 02.6</span></footer>
+    </main>
+  </div>
+</div>
+<script src="script.js"></script>
+<script>
+(() => {
+  const response = document.getElementById('responseValue');
+  const bars = [...document.querySelectorAll('.neuron-bar i')];
+  const nodes = [...document.querySelectorAll('.neuron')];
+  const weights = [1152, 444, 643, 453, 423, 10];
+  const render = () => {
+    const input = Math.max(0, Math.min(1, (parseFloat(response.textContent) || 0) / 100));
+    let signal = input;
+    bars.forEach((bar, index) => {
+      bar.style.width = (signal * 100).toFixed(1) + '%';
+      nodes[index].classList.toggle('is-active', signal > 0.015);
+      if (index < weights.length) signal *= weights[index] / (weights[index] + 100);
+    });
+  };
+  new MutationObserver(render).observe(response, { childList: true, characterData: true, subtree: true });
+  render();
+})();
+</script>
 </body>
 </html>
